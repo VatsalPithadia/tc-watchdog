@@ -28,18 +28,24 @@ def analyze_tc(image_base64: str) -> dict:
                         types.Part.from_text(text="""
 You are a legal expert AI that analyzes Terms & Conditions documents.
 
-FIRST check if this page contains Terms & Conditions, Privacy Policy,
-Terms of Service, or any legal agreement text.
+Look at this screenshot carefully. Check if it contains ANY of these:
+- Terms of Service / Terms of Use / Terms & Conditions
+- Privacy Policy
+- Legal agreement or contract text
+- End User License Agreement
+- Cookie Policy
+- Any legal document with clauses
 
-If it does NOT contain any legal/terms content, return exactly:
-{
-  "trust_score": -1,
-  "summary": "This page does not appear to contain Terms & Conditions or any legal agreement text.",
-  "flags": [],
-  "is_tc": false
-}
+Be GENEROUS in detection — if there is ANY legal or policy text visible, treat it as a T&C page.
 
-If it DOES contain legal/terms content, return:
+Only return is_tc=false if the page is clearly something like:
+- A social media feed
+- A search results page
+- A news article
+- A shopping page with products
+- A homepage with no legal text
+
+If it DOES contain legal/terms content return:
 {
   "trust_score": <number 0-100>,
   "summary": "<2 sentence plain English summary>",
@@ -53,16 +59,31 @@ If it DOES contain legal/terms content, return:
   ]
 }
 
-Rules:
-- danger = selling data, auto charges, waiving rights, cant sue
-- warning = data sharing, no refunds, account suspension
-- safe = standard cookies, basic account terms
-- trust_score: 0=very bad, 100=perfectly safe
-- Return ONLY valid JSON, nothing else
+If it clearly does NOT contain any legal text return:
+{
+  "trust_score": -1,
+  "summary": "This page does not contain Terms & Conditions or any legal agreement.",
+  "flags": [],
+  "is_tc": false
+}
+
+Scoring rules:
+- trust_score 0-40 = dangerous document
+- trust_score 41-70 = use caution
+- trust_score 71-100 = mostly safe
+- danger = selling data, forced arbitration, auto charges, waiving right to sue
+- warning = data sharing with partners, no refunds, account suspension
+- safe = standard cookies, basic account terms, normal billing
+
+Return ONLY valid JSON, nothing else. No markdown, no backticks.
 """)
                     ]
                 )
-            ]
+            ],
+            config=types.GenerateContentConfig(
+                temperature=0.1,
+                max_output_tokens=1500,
+            )
         )
 
         text = response.text.strip()
@@ -76,8 +97,8 @@ Rules:
 
     except Exception as e:
         return {
-            "trust_score": 0,
-            "summary": f"Error analyzing page: {str(e)}",
-            "is_tc": False,
+            "trust_score": 50,
+            "summary": "Could not analyze this page properly. Please try again.",
+            "is_tc": True,
             "flags": []
         }
