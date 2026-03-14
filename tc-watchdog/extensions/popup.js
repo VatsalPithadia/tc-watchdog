@@ -3,11 +3,9 @@ const BACKEND_URL = "http://127.0.0.1:8000";
 document.getElementById("scanBtn").addEventListener("click", async () => {
   const resultDiv = document.getElementById("result");
   const btn = document.getElementById("scanBtn");
-  const badge = document.getElementById("riskBadge");
 
   btn.disabled = true;
-  btn.textContent = "Scanning...";
-  badge.innerHTML = "";
+  btn.innerHTML = "⏳ Scanning...";
   resultDiv.innerHTML = `
     <div class="scanning">
       <div class="spinner"></div>
@@ -46,7 +44,7 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
       </div>`;
   } finally {
     btn.disabled = false;
-    btn.textContent = "🔍 Scan Again";
+    btn.innerHTML = "🔍 Scan Again";
   }
 });
 
@@ -54,6 +52,22 @@ function displayResult(data) {
   const resultDiv = document.getElementById("result");
   const badge = document.getElementById("riskBadge");
 
+  // ---- NOT A T&C PAGE ----
+  if (data.is_tc === false) {
+    badge.innerHTML = `<span class="risk-badge" style="background:#1e293b;color:#64748b;border:0.5px solid #334155;">NOT T&C</span>`;
+    resultDiv.innerHTML = `
+      <div style="margin-top:14px;background:#0d1527;border:0.5px solid #1e3a5f;border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px;">🔍</div>
+        <div style="font-size:14px;font-weight:500;color:#e2e8f0;margin-bottom:6px;">No T&C Found</div>
+        <div style="font-size:12px;color:#64748b;line-height:1.6;">
+          This page does not contain Terms & Conditions.<br>
+          Please go to a T&C or Privacy Policy page and scan again.
+        </div>
+      </div>`;
+    return;
+  }
+
+  // ---- IS A T&C PAGE ----
   const score = data.trust_score;
   const scoreColor = score >= 70 ? "#22c55e" : score >= 40 ? "#f97316" : "#ef4444";
   const radius = 28;
