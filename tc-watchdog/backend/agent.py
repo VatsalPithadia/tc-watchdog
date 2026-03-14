@@ -15,7 +15,7 @@ def analyze_tc(image_base64: str) -> dict:
     image_data = base64.b64decode(image_base64)
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-pro",
         contents=[
             types.Content(
                 role="user",
@@ -25,25 +25,37 @@ def analyze_tc(image_base64: str) -> dict:
                         mime_type="image/png"
                     ),
                     types.Part.from_text(text="""
-You are a legal expert AI. Analyze this Terms and Conditions screenshot.
+You are a legal expert AI that analyzes Terms & Conditions documents.
 
-Return a JSON response with this exact format:
+FIRST — check if this page contains Terms & Conditions, Privacy Policy, 
+Terms of Service, or any legal agreement text.
+
+If it does NOT contain any legal/terms content, return exactly this:
+{
+  "trust_score": -1,
+  "summary": "This page does not appear to contain Terms & Conditions or any legal agreement text.",
+  "flags": [],
+  "is_tc": false
+}
+
+If it DOES contain legal/terms content, analyze it and return:
 {
   "trust_score": <number 0-100>,
   "summary": "<2 sentence plain English summary>",
+  "is_tc": true,
   "flags": [
     {
       "level": "danger or warning or safe",
       "clause": "<short clause title>",
-      "explanation": "<plain English explanation>"
+      "explanation": "<plain English explanation in 1 simple sentence>"
     }
   ]
 }
 
-Rules:
-- danger = selling data, auto charges, waiving rights, cant sue
-- warning = data sharing, no refunds, account suspension
-- safe = standard cookies, basic account terms
+Rules for analysis:
+- danger = selling data, auto charges, waiving rights, cant sue, forced arbitration
+- warning = data sharing, no refunds, account suspension, terms can change
+- safe = standard cookies, basic account terms, normal billing
 - trust_score: 0=very bad, 100=perfectly safe
 - Keep explanations simple, max 1 sentence each
 - Return ONLY valid JSON, nothing else
