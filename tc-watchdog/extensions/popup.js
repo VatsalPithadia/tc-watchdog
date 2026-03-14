@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_URL = "https://tc-watchdog-production.up.railway.app";
 
 document.getElementById("scanBtn").addEventListener("click", async () => {
   const resultDiv = document.getElementById("result");
