@@ -1,0 +1,6 @@
+google-adk
+google-generativeai
+fastapi
+uvicorn
+python-multipart
+pillow

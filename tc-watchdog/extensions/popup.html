@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 380px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0f1e;
+      color: white;
+    }
+    .header {
+      background: #0d1527;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 0.5px solid #1e293b;
+    }
+    .header-icon {
+      width: 36px; height: 36px;
+      background: #1e3a5f;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header-info { flex: 1; }
+    .header-info h2 { font-size: 15px; font-weight: 500; color: #e2e8f0; letter-spacing: 0.5px; }
+    .header-info p { font-size: 11px; color: #475569; margin-top: 1px; }
+    .risk-badge {
+      font-size: 10px; font-weight: 500;
+      padding: 3px 8px; border-radius: 20px;
+    }
+    .risk-high   { background: #ef444420; color: #ef4444; border: 0.5px solid #ef444440; }
+    .risk-medium { background: #f9731620; color: #f97316; border: 0.5px solid #f9731640; }
+    .risk-low    { background: #22c55e20; color: #22c55e; border: 0.5px solid #22c55e40; }
+
+    .body { padding: 14px; }
+
+    #scanBtn {
+      width: 100%; padding: 12px;
+      background: #1d6fa4;
+      color: white; border: none;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; letter-spacing: 0.3px;
+      transition: background 0.2s;
+    }
+    #scanBtn:hover { background: #1a5f8e; }
+    #scanBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .scanning {
+      text-align: center; padding: 28px 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 2.5px solid #1e293b;
+      border-top: 2.5px solid #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .scanning strong { font-size: 13px; color: #94a3b8; font-weight: 500; }
+    .scanning small { font-size: 11px; color: #334155; display: block; margin-top: 4px; }
+
+    .score-card {
+      background: #0d1527;
+      border-radius: 12px; padding: 14px;
+      border: 0.5px solid #1e293b;
+      display: flex; align-items: center;
+      gap: 14px; margin-bottom: 10px;
+    }
+    .score-ring { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+    .score-ring svg { display: block; }
+    .score-text {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .score-text .num { font-size: 20px; font-weight: 500; }
+    .score-text .denom { font-size: 9px; color: #475569; }
+    .score-info h3 { font-size: 13px; font-weight: 500; color: #e2e8f0; margin-bottom: 6px; }
+    .badges { display: flex; gap: 5px; flex-wrap: wrap; }
+    .badge {
+      font-size: 10px; padding: 2px 7px;
+      border-radius: 20px; font-weight: 400;
+    }
+    .badge.danger  { background: #ef444415; color: #ef4444; border: 0.5px solid #ef444430; }
+    .badge.warning { background: #f9731615; color: #f97316; border: 0.5px solid #f9731630; }
+    .badge.safe    { background: #22c55e15; color: #22c55e; border: 0.5px solid #22c55e30; }
+
+    .summary {
+      background: #0d1527;
+      border-left: 2.5px solid #38bdf8;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+      font-size: 12px; color: #94a3b8;
+      line-height: 1.6; margin-bottom: 10px;
+    }
+
+    .section-label {
+      font-size: 10px; color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 1.5px; font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .flag {
+      border-radius: 10px; padding: 11px 13px;
+      margin-bottom: 7px; border: 0.5px solid transparent;
+    }
+    .flag-header {
+      display: flex; align-items: center;
+      gap: 7px; margin-bottom: 4px;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .flag-title { font-size: 12px; font-weight: 500; flex: 1; }
+    .flag-tag {
+      font-size: 9px; padding: 2px 6px;
+      border-radius: 4px; font-weight: 500;
+    }
+    .flag-desc { font-size: 11px; color: #64748b; line-height: 1.5; }
+
+    .flag.danger  { background: #1a0a0a; border-color: #ef444425; }
+    .flag.warning { background: #1a0f0a; border-color: #f9731625; }
+    .flag.safe    { background: #0a1a0f; border-color: #22c55e25; }
+
+    .flag.danger  .dot { background: #ef4444; }
+    .flag.warning .dot { background: #f97316; }
+    .flag.safe    .dot { background: #22c55e; }
+
+    .flag.danger  .flag-title { color: #fca5a5; }
+    .flag.warning .flag-title { color: #fdba74; }
+    .flag.safe    .flag-title { color: #86efac; }
+
+    .flag.danger  .flag-tag { background: #ef444420; color: #ef4444; }
+    .flag.warning .flag-tag { background: #f9731620; color: #f97316; }
+    .flag.safe    .flag-tag { background: #22c55e20; color: #22c55e; }
+
+    .error-box {
+      background: #1a0a0a; border: 0.5px solid #ef444430;
+      border-radius: 10px; padding: 14px;
+      text-align: center; color: #ef4444;
+      font-size: 12px; margin-top: 12px;
+    }
+    .error-box small { color: #475569; display: block; margin-top: 4px; font-size: 11px; }
+
+    .footer {
+      text-align: center; padding: 10px;
+      font-size: 10px; color: #1e3a5f;
+      border-top: 0.5px solid #0f1f35;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-icon">⚖️</div>
+    <div class="header-info">
+      <h2>T&amp;C Watchdog</h2>
+      <p>AI-powered clause detector</p>
+    </div>
+    <div id="riskBadge"></div>
+  </div>
+
+  <div class="body">
+    <button id="scanBtn">🔍 Scan This Page</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="footer">Powered by Gemini 2.5 Pro · Gemini Hackathon 2025</div>
+  <script src="popup.js"></script>
+</body>
+</html>
