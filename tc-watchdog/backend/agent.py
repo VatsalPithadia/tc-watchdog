@@ -16,7 +16,7 @@ def analyze_tc(image_base64: str) -> dict:
         image_data = base64.b64decode(image_base64)
 
         response = client.models.generate_content(
-            model="gemini-2.5-pro",
+            model="gemini-2.5-flash",
             contents=[
                 types.Content(
                     role="user",
