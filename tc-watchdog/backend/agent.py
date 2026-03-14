@@ -16,7 +16,7 @@ def analyze_tc(image_base64: str) -> dict:
         image_data = base64.b64decode(image_base64)
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-pro",
             contents=[
                 types.Content(
                     role="user",
@@ -26,72 +26,43 @@ def analyze_tc(image_base64: str) -> dict:
                             mime_type="image/png"
                         ),
                         types.Part.from_text(text="""
-You are a strict legal expert AI. Analyze this Terms & Conditions screenshot.
+You are a legal expert AI that analyzes Terms & Conditions documents.
 
-STEP 1 — Check if this page contains Terms & Conditions, Privacy Policy or legal agreement text.
+FIRST check if this page contains Terms & Conditions, Privacy Policy,
+Terms of Service, or any legal agreement text.
 
-If NO legal text found, return EXACTLY this JSON:
+If it does NOT contain any legal/terms content, return exactly:
 {
   "trust_score": -1,
-  "summary": "This page does not contain Terms & Conditions or any legal agreement.",
+  "summary": "This page does not appear to contain Terms & Conditions or any legal agreement text.",
   "flags": [],
   "is_tc": false
 }
 
-If YES legal text found, follow these STRICT rules:
-
-TRUST SCORE RULES — must follow exactly:
-- Start at 100
-- Subtract 30 for each DANGER clause found
-- Subtract 10 for each WARNING clause found
-- Minimum score is 0
-
-DANGER clauses — ALWAYS flag these:
-- Selling or sharing personal data with third parties for profit
-- Forced arbitration or waiving right to sue
-- Auto renewal charges without clear notice
-- Collecting data without consent
-- Can terminate account without reason
-
-WARNING clauses — ALWAYS flag these:
-- Sharing data with partners for advertising
-- No refund policy
-- Can change terms anytime without notice
-- Content ownership claims
-- Account suspension without warning
-
-SAFE clauses — ALWAYS flag these:
-- Standard cookie usage for login only
-- Basic account creation terms
-- Standard billing terms
-
-Return EXACTLY this JSON format:
+If it DOES contain legal/terms content, return:
 {
-  "trust_score": <calculated number 0-100>,
-  "summary": "<exactly 2 sentences in simple English>",
+  "trust_score": <number 0-100>,
+  "summary": "<2 sentence plain English summary>",
   "is_tc": true,
   "flags": [
     {
-      "level": "danger",
-      "clause": "<max 5 words title>",
-      "explanation": "<exactly 1 simple sentence>"
+      "level": "danger or warning or safe",
+      "clause": "<short clause title>",
+      "explanation": "<plain English explanation in 1 simple sentence>"
     }
   ]
 }
 
-IMPORTANT RULES:
-- Always return same result for same document
-- Be consistent — same clauses always get same level
-- Return ONLY valid JSON, no extra text
-- No markdown, no backticks
+Rules:
+- danger = selling data, auto charges, waiving rights, cant sue
+- warning = data sharing, no refunds, account suspension
+- safe = standard cookies, basic account terms
+- trust_score: 0=very bad, 100=perfectly safe
+- Return ONLY valid JSON, nothing else
 """)
                     ]
                 )
-            ],
-            config=types.GenerateContentConfig(
-                temperature=0.0,
-                max_output_tokens=1000,
-            )
+            ]
         )
 
         text = response.text.strip()
